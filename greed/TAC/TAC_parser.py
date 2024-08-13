@@ -64,7 +64,7 @@ class TAC_parser:
         # tac_function_blocks: Mapping[str, List[str]]
         tac_function_blocks = load_csv_multimap(f"{self.target_dir}/InFunction.csv", reverse=True) 
         
-        # Statement IDs (value) that each TAC (key) blocks contains
+        # Statement IDs (value) that each TAC blocks (keys) contains
         # tac_block_stmts: Mapping[str, List[str]]
         tac_block_stmts = load_csv_multimap(f"{self.target_dir}/TAC_Block.csv", reverse=True)
         
@@ -91,7 +91,6 @@ class TAC_parser:
         tac_uses: Mapping[str, List[Tuple[str, int]]] = defaultdict(list)
         for stmt_id, var, pos in load_csv(f"{self.target_dir}/TAC_Use.csv"):
             tac_uses[stmt_id].append((var, int(pos)))
-
         
         func_name_to_sig = load_csv(f"{self.target_dir}/ConstantPossibleSigHash.csv")
         func_name_to_sig = {x: y for x, y in zip(*list(zip(*func_name_to_sig))[-2:])}
