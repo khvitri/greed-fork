@@ -117,13 +117,16 @@ class TAC_parser:
         
         # parse all statements block after block
         statements: Dict[str, TAC_Statement] = dict()
-        for block_id in itertools.chain(*tac_function_blocks.values()):
+        # itertools.chain(*tac_function_blocks.values()) transforms from dict -> [[x1, y1], [x2], [y2] ...] -> [x1, y1], [x2], [y2] ... -> [x1, y1, x2, y2, ...]
+        for block_id in itertools.chain(*tac_function_blocks.values()): # Gives a list of block ids 
             for stmt_id in tac_block_stmts[block_id]:
                 opcode = tac_op[stmt_id]
-                raw_uses = [var for var, _ in sorted(tac_uses[stmt_id], key=lambda x: x[1])]
-                raw_defs = [var for var, _ in sorted(tac_defs[stmt_id], key=lambda x: x[1])]
+                raw_uses = [var for var, _ in sorted(tac_uses[stmt_id], key=lambda x: x[1])] # [(v1, 2), (v0, 1), (v2, 0)] -> [(v2, 0), (v0, 1), (v1, 2)] -> [v2, v0, v1]
+                raw_defs = [var for var, _ in sorted(tac_defs[stmt_id], key=lambda x: x[1])] 
                 uses = ['v' + v.replace('0x', '') for v in raw_uses]
                 defs = ['v' + v.replace('0x', '') for v in raw_defs]
+
+                # Gets the value at key v. If v does not exist, return 'None'
                 values = {v: tac_variable_value.get(v, None) for v in uses + defs}
                 OpcodeClass = tac_opcode_to_class_map[opcode]
                 statement = OpcodeClass(block_id=block_id, stmt_id=stmt_id, uses=uses, defs=defs, values=values)
