@@ -169,13 +169,14 @@ class SimulationManager:
 
         # Let's step the active!
         for state in self.active:
-            try:
-                successors = self.single_step_state(state)
+            successors = self.single_step_state(state)
+            """
             except Exception as e:
                 log.exception(f"Something went wrong while generating successor for {state}")
                 state.error = e
                 state.halt = True
                 successors = [state]
+            """
             new_active += successors
 
         self.stashes['active'] = new_active
@@ -224,13 +225,15 @@ class SimulationManager:
             state_to_step = t.check_state(self, state_to_step)
 
         # Finally step the state
-        try:
-            successors += state.curr_stmt.handle(state)
+        
+        successors += state.curr_stmt.handle(state)
+        """
         except Exception as e:
             log.exception(f"Something went wrong while generating successor for {state}")
             state.error = e
             state.halt = True
             successors += [state]
+        """
 
         # Let exploration techniques manipulate the successors
         for t in self._techniques:
@@ -259,17 +262,17 @@ class SimulationManager:
         Raises:
             Exception: If something goes wrong while stepping the simulation manager
         """
-        try:
-            # We iterate until we have active states,
-            # OR, if any of the ET is not done.
-            while len(self.active) > 0 or (self._techniques != [] and
-                                            not(all([t.is_complete(self) for t in self._techniques]))):
+    
+        # We iterate until we have active states,
+        # OR, if any of the ET is not done.
+        while len(self.active) > 0 or (self._techniques != [] and
+                                        not(all([t.is_complete(self) for t in self._techniques]))):
 
-                if len(self.found) > 0 and not find_all:
-                    break
+            if len(self.found) > 0 and not find_all:
+                break
 
-                self.step(find, prune)
-
+            self.step(find, prune)
+        """
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -277,6 +280,7 @@ class SimulationManager:
             log.exception(f'Exception while stepping the Simulation Manager')
             self.set_error(f'{exc_type.__name__} at {fname}:{exc_tb.tb_lineno}')
             sys.exit(1)
+        """
 
     def findall(self, find: Callable[[SymbolicEVMState], bool] = lambda s: False,
             prune: Callable[[SymbolicEVMState], bool] = lambda s: False):
@@ -290,14 +294,13 @@ class SimulationManager:
         Raises:
             Exception: If something goes wrong while stepping the simulation manager
         """
-        try:
-            while len(self.active) > 0 or (self._techniques != [] and not(all([t.is_complete(self) for t in self._techniques]))):
-                self.step(find, prune)
+        while len(self.active) > 0 or (self._techniques != [] and not(all([t.is_complete(self) for t in self._techniques]))):
+            self.step(find, prune)
 
-                for found in self.found:
-                    yield found
-                self.stashes["found"] = list()
-
+            for found in self.found:
+                yield found
+            self.stashes["found"] = list()
+        """
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -305,7 +308,7 @@ class SimulationManager:
             log.exception(f'Exception while stepping the Simulation Manager')
             self.set_error(f'{exc_type.__name__} at {fname}:{exc_tb.tb_lineno}')
             sys.exit(1)
-
+        """
 
     def __str__(self):
         stashes_str = [f'{len(stash)} {stash_name}'  # {[s for s in stash]}'

@@ -147,6 +147,10 @@ class TAC_Statement(Aliased):
             if all([self.res_vals[var] is not None for var in self.res_vars]):
                 succ = state
 
+                if (state.curr_stmt.__internal_name__ == "RETURNDATACOPY"):
+                    print(self.res_vars)
+                    print(self.res_vals)
+
                 # Grab vals from Gigahorse IR and registers if they are available.
                 for var in self.res_vars:
                     succ.registers[var] = self.res_vals[var]
