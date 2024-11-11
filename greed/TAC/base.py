@@ -172,13 +172,14 @@ class TAC_Statement(Aliased):
 
         @functools.wraps(func)
         def wrap(self, state: SymbolicEVMState):
-            self.set_arg_val(state)
+            self.set_arg_val(state) 
             state.trace.append(state.curr_stmt)
             state.instruction_count += 1
 
             # always execute the actual handler because we need the side-effects
             successors = func(self, state)
             self.reset_arg_val()
+
             return successors
 
         return wrap

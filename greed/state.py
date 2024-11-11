@@ -210,7 +210,7 @@ class SymbolicEVMState:
         """
         try:
             curr_bb = self.project.factory.block(self.curr_stmt.block_id)
-            stmt_list_idx = curr_bb.statements.index(self.curr_stmt)
+            stmt_list_idx = curr_bb.statements.index(self.curr_stmt) 
             remaining_stmts = curr_bb.statements[stmt_list_idx + 1:]
             if remaining_stmts:
                 self.pc = remaining_stmts[0].id

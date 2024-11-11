@@ -224,8 +224,8 @@ class SimulationManager:
             state_to_step = t.check_state(self, state_to_step)
 
         # Finally step the state
-        try: 
-            successors += state.curr_stmt.handle(state)
+        try:
+            successors += state.curr_stmt.handle(state) 
         except Exception as e:
             log.exception(f"Something went wrong while generating successor for {state}")
             state.error = e

@@ -110,6 +110,7 @@ class TAC_BaseCall(TAC_Statement):
         state.returndata['size'] = olen
         state.returndata['instruction_count'] = state.instruction_count
         
+        """
         if is_concrete(address_val) and bv_unsigned_value(address_val) == 0:
             log.info("Calling into burn contract")
             if is_concrete(olen):
@@ -152,8 +153,9 @@ class TAC_BaseCall(TAC_Statement):
             state.registers[self.res1_var] = BVV(1, 256)
         else:
             state.registers[self.res1_var] = BVS(f'CALLRESULT_{state.instruction_count}_{state.xid}', 256)
-
+        """
         state.set_next_pc()
+
         return [state]
     
     def set_likely_known_target_func(self, target_function):
@@ -177,7 +179,6 @@ class TAC_Call(TAC_BaseCall):
         state.add_constraint(BV_UGE(state.balance, self.value_val))
         state.balance = BV_Sub(state.balance, self.value_val)
         return self._handle(state, value_val=self.value_val)
-
 
 class TAC_Callcode(TAC_BaseCall):
     __internal_name__ = "CALLCODE"
