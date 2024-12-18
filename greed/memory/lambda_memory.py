@@ -276,6 +276,13 @@ class LambdaMemory:
             return res
 
     def writen(self, index, v, n):
+        """Writes n bytes of a value (v) at a offset in memory (index). 
+        
+        Args:
+            index: A YicesTermBV representing the offset in memory to write to.
+            v: A YicesTermBV representing the value to write to memory.
+            n: A YicesTermBVV representing the number of bytes to write to in memory.
+        """
         assert is_concrete(n), "writen with symbolic length not implemented"
         assert bv_unsigned_value(n) != 0, "invalid writen with length=0"
         n_val = bv_unsigned_value(n)
@@ -292,8 +299,8 @@ class LambdaMemory:
             self.cache[bv_unsigned_value(n)][bv_unsigned_value(index)] = v
 
     def memset(self, start, value, size):
-        """
-        Perform a memset operation
+        """Perform a memset operation.
+        
         Args:
             start: the start index
             value: the value to write

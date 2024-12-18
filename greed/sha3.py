@@ -19,8 +19,8 @@ class Sha3(LambdaMemory):
         Args:
             state: The SimState that triggers the SHA3 operation
             memory: The memory associated to the SimState
-            start: The start of the input buffer for the SHA3 operation
-            size: The size of the input buffer for the SHA3 operation
+            start: A YicesTermBV representing the start of the input buffer for the SHA3 operation in bytes.
+            size: A YicesTermBV representing the size of the input buffer for the SHA3 operation in bytes
             partial_init: Whether to partially initialize the object or not
         """
 
