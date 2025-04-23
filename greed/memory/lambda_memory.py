@@ -274,7 +274,7 @@ class LambdaMemory:
             self.add_constraint(Equal(res, BV_Concat(vv)))
             # print(f"actual readn {bv_unsigned_value(index)}:{n_val} = {BV_Concat(vv)}")
             return res
-
+ 
     def writen(self, index, v, n):
         """Writes n bytes of a value (v) at a offset in memory (index). 
         
