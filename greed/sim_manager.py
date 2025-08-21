@@ -9,14 +9,18 @@ from greed.state import SymbolicEVMState
 if TYPE_CHECKING:
     from greed.exploration_techniques import ExplorationTechnique
     from greed.project import Project
-    _STASHES_TYPE = TypedDict('Stashes', {
-        'active': List[SymbolicEVMState],
-        'deadended': List[SymbolicEVMState],
-        'found': List[SymbolicEVMState],
-        'pruned': List[SymbolicEVMState],
-        'unsat': List[SymbolicEVMState],
-        'errored': List[SymbolicEVMState]
-    })
+
+    _STASHES_TYPE = TypedDict(
+        "Stashes",
+        {
+            "active": List[SymbolicEVMState],
+            "deadended": List[SymbolicEVMState],
+            "found": List[SymbolicEVMState],
+            "pruned": List[SymbolicEVMState],
+            "unsat": List[SymbolicEVMState],
+            "errored": List[SymbolicEVMState],
+        },
+    )
 
 
 log = logging.getLogger(__name__)
@@ -29,6 +33,7 @@ class SimulationManager:
     and for moving them between the different stashes according to the employed
     exploration techniques.
     """
+
     project: "Project"
     _techniques: List["ExplorationTechnique"]
     stashes: "_STASHES_TYPE"
@@ -46,12 +51,12 @@ class SimulationManager:
 
         # initialize empty stashes
         self.stashes = {
-            'active': [],
-            'deadended': [],
-            'found': [],
-            'pruned': [],
-            'unsat': [],
-            'errored': []
+            "active": [],
+            "deadended": [],
+            "found": [],
+            "pruned": [],
+            "unsat": [],
+            "errored": [],
         }
 
         self.insns_count = 0
@@ -63,7 +68,7 @@ class SimulationManager:
         """
         Set an error to the simulation manager
         """
-        log.error(f'[ERROR] {s}')
+        log.error(f"[ERROR] {s}")
         self.error += [s]
 
     @property
@@ -80,7 +85,7 @@ class SimulationManager:
         Returns:
             All the active states
         """
-        return self.stashes['active']
+        return self.stashes["active"]
 
     @property
     def deadended(self) -> List[SymbolicEVMState]:
@@ -88,7 +93,7 @@ class SimulationManager:
         Returns:
             All the deadended states (halted states)
         """
-        return self.stashes['deadended']
+        return self.stashes["deadended"]
 
     @property
     def found(self) -> List[SymbolicEVMState]:
@@ -96,7 +101,7 @@ class SimulationManager:
         Returns:
             All the found states (states that met the `find` condition)
         """
-        return self.stashes['found']
+        return self.stashes["found"]
 
     @property
     def one_active(self) -> Optional[SymbolicEVMState]:
@@ -104,8 +109,8 @@ class SimulationManager:
         Returns:
             First element of the active stash, or None if the stash is empty
         """
-        if len(self.stashes['active']) > 0:
-            return self.stashes['active'][0]
+        if len(self.stashes["active"]) > 0:
+            return self.stashes["active"][0]
         else:
             return None
 
@@ -115,8 +120,8 @@ class SimulationManager:
         Returns:
             First element of the deadended stash, or None if the stash is empty
         """
-        if len(self.stashes['deadended']) > 0:
-            return self.stashes['deadended'][0]
+        if len(self.stashes["deadended"]) > 0:
+            return self.stashes["deadended"][0]
         else:
             return None
 
@@ -126,8 +131,8 @@ class SimulationManager:
         Returns:
             First element of the found stash, or None if the stash is empty
         """
-        if len(self.stashes['found']) > 0:
-            return self.stashes['found'][0]
+        if len(self.stashes["found"]) > 0:
+            return self.stashes["found"][0]
         else:
             return None
 
@@ -140,7 +145,12 @@ class SimulationManager:
         self._techniques.append(technique)
         return technique
 
-    def move(self, from_stash: str, to_stash: str, filter_func: Callable[[SymbolicEVMState], bool] = lambda s: True):
+    def move(
+        self,
+        from_stash: str,
+        to_stash: str,
+        filter_func: Callable[[SymbolicEVMState], bool] = lambda s: True,
+    ):
         """
         Move all the states that meet the filter_func condition from from_stash to to_stash
         Args:
@@ -153,15 +163,18 @@ class SimulationManager:
                 self.stashes[from_stash].remove(s)
                 self.stashes[to_stash].append(s)
 
-    def step(self, find: Callable[[SymbolicEVMState], bool] = lambda s: False,
-                   prune: Callable[[SymbolicEVMState], bool] = lambda s: False):
+    def step(
+        self,
+        find: Callable[[SymbolicEVMState], bool] = lambda s: False,
+        prune: Callable[[SymbolicEVMState], bool] = lambda s: False,
+    ):
         """
         Step the simulation manager, i.e., step all the active states.
         Args:
             find: A function that discriminates what states should be moved to the found stash
             prune: A function that discriminates what states should be moved to the pruned stash
         """
-        log.debug('-' * 30)
+        log.debug("-" * 30)
         new_active = list()
         # Let the techniques manipulate the stashes
         for tech in self._techniques:
@@ -172,26 +185,46 @@ class SimulationManager:
             try:
                 successors = self.single_step_state(state)
             except Exception as e:
-                log.exception(f"Something went wrong while generating successor for {state}")
+                log.exception(
+                    f"Something went wrong while generating successor for {
+                        state}"
+                )
                 state.error = e
                 state.halt = True
                 successors = [state]
             new_active += successors
 
-        self.stashes['active'] = new_active
+        self.stashes["active"] = new_active
 
         self.insns_count += 1
 
-        self.move(from_stash='active', to_stash='found', filter_func=find)
-        self.move(from_stash='active', to_stash='errored', filter_func=lambda s: s.error != None)
-        self.move(from_stash='active', to_stash='deadended', filter_func=lambda s: s.halt)
-        self.move(from_stash='active', to_stash='pruned', filter_func=prune)
+        self.move(from_stash="active", to_stash="found", filter_func=find)
+        self.move(
+            from_stash="active",
+            to_stash="errored",
+            filter_func=lambda s: s.error != None,
+        )
+        self.move(
+            from_stash="active", to_stash="deadended", filter_func=lambda s: s.halt
+        )
+        self.move(from_stash="active", to_stash="pruned", filter_func=prune)
 
         if not options.LAZY_SOLVES:
-            self.move(from_stash='active', to_stash='unsat', filter_func=lambda s: not s.solver.is_sat())
-        self.move(from_stash='found', to_stash='unsat', filter_func=lambda s: not s.solver.is_sat())
+            self.move(
+                from_stash="active",
+                to_stash="unsat",
+                filter_func=lambda s: not s.solver.is_sat(),
+            )
+        self.move(
+            from_stash="found",
+            to_stash="unsat",
+            filter_func=lambda s: not s.solver.is_sat(),
+        )
 
-        for s in self.stashes['pruned'] + self.stashes['unsat'] + self.stashes['errored']:
+        for s in (
+            self.stashes["pruned"] + self.stashes["unsat"] +
+                self.stashes["errored"]
+        ):
             s.solver.dispose_context()
 
     def single_step_state(self, state: SymbolicEVMState) -> List[SymbolicEVMState]:
@@ -213,9 +246,12 @@ class SimulationManager:
         # Some inspect capabilities, uses the plugin.
         if hasattr(state, "inspect"):
             # OP_BEFORE inspects
-            stmt_ids_before = state.inspect.breakpoints_stmt_ids.get(options.OP_BEFORE, {})
-            stmt_before = state.inspect.breakpoints_stmt.get(options.OP_BEFORE, {})
-            
+            stmt_ids_before = state.inspect.breakpoints_stmt_ids.get(
+                options.OP_BEFORE, {}
+            )
+            stmt_before = state.inspect.breakpoints_stmt.get(
+                options.OP_BEFORE, {})
+
             # Trigger breakpoints on specific stmt_id
             if old_pc in stmt_ids_before:
                 stmt_ids_before[old_pc](self, state)
@@ -234,18 +270,23 @@ class SimulationManager:
 
         # Finally step the state
         try:
-            successors += state.curr_stmt.handle(state) 
+            successors += state.curr_stmt.handle(state)
         except Exception as e:
-            log.exception(f"Something went wrong while generating successor for {state}")
+            log.exception(
+                f"Something went wrong while generating successor for {state}"
+            )
             state.error = e
             state.halt = True
             successors += [state]
 
         if hasattr(state, "inspect"):
             # OP_BEFORE inspects
-            stmt_ids_after = state.inspect.breakpoints_stmt_ids.get(options.OP_AFTER, {})
-            stmt_after = state.inspect.breakpoints_stmt.get(options.OP_AFTER, {})
-            
+            stmt_ids_after = state.inspect.breakpoints_stmt_ids.get(
+                options.OP_AFTER, {}
+            )
+            stmt_after = state.inspect.breakpoints_stmt.get(
+                options.OP_AFTER, {})
+
             # Trigger breakpoints on specific stmt_id
             if old_pc in stmt_ids_after:
                 for successor in successors:
@@ -255,7 +296,6 @@ class SimulationManager:
             if old_stmt_name in stmt_after:
                 for successor in successors:
                     stmt_after[old_stmt_name](self, successor)
-            
 
         # Let exploration techniques manipulate the successors
         for t in self._techniques:
@@ -263,9 +303,12 @@ class SimulationManager:
 
         return successors
 
-    def run(self, find: Callable[[SymbolicEVMState], bool] = lambda s: False,
-            prune: Callable[[SymbolicEVMState], bool] = lambda s: False,
-            find_all=False):
+    def run(
+        self,
+        find: Callable[[SymbolicEVMState], bool] = lambda s: False,
+        prune: Callable[[SymbolicEVMState], bool] = lambda s: False,
+        find_all=False,
+    ):
         """
         Run the simulation manager, until the `find` condition is met.
         The analysis will stop when there are no more active states, some states met the `find` condition
@@ -284,13 +327,14 @@ class SimulationManager:
         Raises:
             Exception: If something goes wrong while stepping the simulation manager
         """
-    
+
         # We iterate until we have active states,
         # OR, if any of the ET is not done.
         try:
-            while len(self.active) > 0 or (self._techniques != [] and
-                                            not(all([t.is_complete(self) for t in self._techniques]))):
-
+            while len(self.active) > 0 or (
+                self._techniques != []
+                and not (all([t.is_complete(self) for t in self._techniques]))
+            ):
                 if len(self.found) > 0 and not find_all:
                     break
 
@@ -299,12 +343,16 @@ class SimulationManager:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
-            log.exception(f'Exception while stepping the Simulation Manager')
-            self.set_error(f'{exc_type.__name__} at {fname}:{exc_tb.tb_lineno}')
+            log.exception(f"Exception while stepping the Simulation Manager")
+            self.set_error(f"{exc_type.__name__} at {
+                           fname}:{exc_tb.tb_lineno}")
             sys.exit(1)
 
-    def findall(self, find: Callable[[SymbolicEVMState], bool] = lambda s: False,
-            prune: Callable[[SymbolicEVMState], bool] = lambda s: False):
+    def findall(
+        self,
+        find: Callable[[SymbolicEVMState], bool] = lambda s: False,
+        prune: Callable[[SymbolicEVMState], bool] = lambda s: False,
+    ):
         """
         Run the simulation manager, until the `find` condition of all the ET is met.
         Args:
@@ -316,7 +364,10 @@ class SimulationManager:
             Exception: If something goes wrong while stepping the simulation manager
         """
         try:
-            while len(self.active) > 0 or (self._techniques != [] and not(all([t.is_complete(self) for t in self._techniques]))):
+            while len(self.active) > 0 or (
+                self._techniques != []
+                and not (all([t.is_complete(self) for t in self._techniques]))
+            ):
                 self.step(find, prune)
 
                 for found in self.found:
@@ -326,18 +377,22 @@ class SimulationManager:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
-            log.exception(f'Exception while stepping the Simulation Manager')
-            self.set_error(f'{exc_type.__name__} at {fname}:{exc_tb.tb_lineno}')
+            log.exception(f"Exception while stepping the Simulation Manager")
+            self.set_error(f"{exc_type.__name__} at {
+                           fname}:{exc_tb.tb_lineno}")
             sys.exit(1)
 
     def __str__(self):
-        stashes_str = [f'{len(stash)} {stash_name}'  # {[s for s in stash]}'
-                       for stash_name, stash in self.stashes.items() if len(stash)]
+        stashes_str = [
+            f"{len(stash)} {stash_name}"  # {[s for s in stash]}'
+            for stash_name, stash in self.stashes.items()
+            if len(stash)
+        ]
         errored_count = len([s for s in self.states if s.error])
-        stashes_str += [f'({errored_count} errored)']
+        stashes_str += [f"({errored_count} errored)"]
         reverted_count = len([s for s in self.states if s.revert])
-        stashes_str += [f'({reverted_count} reverted)']
-        return f'<SimulationManager[{self.insns_count}] with {", ".join(stashes_str)}>'
+        stashes_str += [f"({reverted_count} reverted)"]
+        return f"<SimulationManager[{self.insns_count}] with {', '.join(stashes_str)}>"
 
     def __repr__(self):
         return self.__str__()

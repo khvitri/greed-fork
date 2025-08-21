@@ -18,7 +18,7 @@ GIGAHORSE_DIR=$GREED_DIR/gigahorse-toolchain
 arch=$(uname -i)
 
 # compile with solc-select
-SOLC_VERSION=0.8.7 solc --bin-runtime $SOURCE_FILE | sed -rn '/Binary of the runtime part:/{n;p;}' | tail -n 1 | tr -d '\n' >contract.hex || {
+SOLC_VERSION=0.8.28 solc --bin-runtime $SOURCE_FILE | sed -rn '/Binary of the runtime part:/{n;p;}' | tail -n 1 | tr -d '\n' >contract.hex || {
   echo "${bold}${red}Failed to run solc${normal}"
   exit 1
 }

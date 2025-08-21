@@ -20,7 +20,7 @@ if [[ -z $HEX_DIR ]]; then
   echo usage: analyze_hex.sh --dir \<directory containing contract .hex\> --timeout \<timeout\>
   exit 1
 elif [[ -z $TIMEOUT ]]; then
-  TIMEOUT=3600 # Default timeout is 1 hour
+  TIMEOUT=360 # Default timeout is 1 hour
 #  echo usage: analyze_hex.sh --file \<contract .hex file\> --timeout \<timeout\>
 #  exit 1
 elif [ ! -d $HEX_DIR ]; then
@@ -42,18 +42,20 @@ elif [ ! -f $GIGAHORSE_DIR/clients/greed_client.dl_compiled ]; then
 fi
 
 echo "Running gigahorse.py"
-/usr/bin/time -v $GIGAHORSE_DIR/gigahorse.py -j 8 -T $TIMEOUT --reuse_datalog_bin --disable_inline --rerun_clients -C $GIGAHORSE_DIR/clients/greed_client.dl_compiled,$GIGAHORSE_DIR/clients/visualizeout.py,$GIGAHORSE_DIR/clients/slicing.dl $HEX_DIR &>exec_info &&
+/usr/bin/time -v $GIGAHORSE_DIR/gigahorse.py -j 10 -T $TIMEOUT --reuse_datalog_bin --disable_inline -C $GIGAHORSE_DIR/clients/greed_client.dl_compiled,$GIGAHORSE_DIR/clients/visualizeout.py $HEX_DIR &>exec_info &&
   curr_dir=$(pwd) && cd $GIGAHORSE_DIR && gigahorse_version=$(git rev-parse HEAD) && cd $curr_dir && printf "\tGigahorse version: $gigahorse_version\n" >>exec_info &&
   curr_dir=$(pwd) && cd $GREED_DIR && greed_version=$(git rev-parse HEAD) && cd $curr_dir && printf "\tgreed version: $greed_version\n" >>exec_info
 
 for path in .temp/*; do
   [ -d $path ] || continue
   rm $path/out/bytecode.hex
-  cp $path/out/* $path
+  mv $path/out/* $path
   mv $path/bytecode.hex $path/contract.hex
   rm -rf $path/out $path/Analytics_ReachableUnderContext.csv $path/Analytics_Contexts.csv
   chmod 664 $path/*
 done
 
-mv .temp/* .
+set -e
+
+find .temp/ -maxdepth 1 -mindepth 1 -type d -print0 | xargs -0 mv -t .
 rm -rf .temp
