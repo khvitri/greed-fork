@@ -60,7 +60,7 @@ for package in gcc cmake gperf gmp; do
 done
 if [ -z $NO_GIGAHORSE ]; then
 	command -v mkisofs >&- || MISSING_APT_PACKAGES+=("mkisofs")
-	for package in bison build-essential clang cmake doxygen flex g++ git libffi7 libffi-dev libncurses5-dev libsqlite3-dev make mcpp python sqlite zlib1g-dev libboost-all-dev; do
+	for package in bison build-essential clang cmake doxygen flex g++ git libffi7 libffi-dev libncurses6-dev libsqlite3-dev make mcpp python sqlite zlib1g-dev libboost-all-dev; do
 		pacman -Q | grep -q $package || MISSING_APT_PACKAGES+=($package)
 	done
 	command -v souffle >&- || IS_SOUFFLE_MISSING=TRUE
@@ -136,6 +136,10 @@ autoconf || {
 }
 make || {
   echo "${bold}${red}Failed to run make${normal}"
+  exit 1
+}
+sudo make install || {
+  echo "${bold}${red}Failed to run sudo make install${normal}"
   exit 1
 }
 
