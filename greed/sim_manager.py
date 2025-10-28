@@ -5,6 +5,7 @@ from typing import Callable, List, Optional, TYPE_CHECKING, TypedDict
 
 from greed import options
 from greed.state import SymbolicEVMState
+from greed.utils.exceptions import SolverTimeout
 
 if TYPE_CHECKING:
     from greed.exploration_techniques import ExplorationTechnique
@@ -159,9 +160,16 @@ class SimulationManager:
             filter_func: A function that discriminates what states should be moved
         """
         for s in list(self.stashes[from_stash]):
-            if filter_func(s):
+            try:
+                if filter_func(s):
+                    self.stashes[from_stash].remove(s)
+                    self.stashes[to_stash].append(s)
+            except SolverTimeout as e:
                 self.stashes[from_stash].remove(s)
-                self.stashes[to_stash].append(s)
+                s.error = e
+                s.halt = True
+                self.stashes["errored"].append(s)
+                print(e)
 
     def step(
         self,
